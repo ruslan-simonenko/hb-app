@@ -1,4 +1,4 @@
-var core = {
+var app = {
 
 	// List of predefined scope variables:
 	settings: { 
@@ -18,6 +18,9 @@ var core = {
 	// Application templates storage
 	templates: new Backbone.Collection,
 
+    // Application events handling storage
+    events: _.clone(Backbone.Events),
+
 	// Temporary storage scope variables:
 	storage: { views: {}, models: {}, collections: {} },
 
@@ -34,7 +37,10 @@ var core = {
             self.initViews();
             self.initCollections();
 
+            self.events.trigger('application:init-complete');
+
             delete self.storage;
+            delete self.init;
 		});
 	},
 
@@ -50,6 +56,8 @@ var core = {
             success: function(response) {
                 self.settings.app.set(response);
                 deferred.resolve();
+
+                delete self.loadSettingsApp;
             }
         });
 
@@ -68,6 +76,8 @@ var core = {
             success: function(response) {
                 self.settings.api.set(response);
                 deferred.resolve();
+
+                delete self.loadSettingsApi;
             }
         });
 
@@ -75,31 +85,57 @@ var core = {
 	},
 
 	initRouter: function() {
-        this.router = new core.storage.router;
+        this.router = new app.storage.router;
+
+        delete this.initRouter;
 	},
 
 	initModels: function() {
         var self = this;
 
-        $.each(this.storage.models, function(key, model) {
+        $.each(this.storage.models, function(id, Model) {
             var collectionScope = new Backbone.Model;
 
-            collectionScope.set('id', key);
-            collectionScope.set('scopre', model);
+            collectionScope.set('id', id);
+            collectionScope.set('scope', new Model);
 
             self.models.add(collectionScope);
         });
+
+        delete this.initModels;
 	},
 
 	initViews: function() {
-        console.log('init views');
+        var self = this;
+
+        $.each(this.storage.views, function(id, View) {
+            var collectionScope = new Backbone.Model;
+
+            collectionScope.set('id', id);
+            collectionScope.set('scope', new View);
+
+            self.views.add(collectionScope);
+        });
+
+        delete this.initViews;
 	},
 
 	initCollections: function() {
-        console.log('init collections');
+        var self = this;
+
+        $.each(this.storage.views, function(id, Collection) {
+            var collectionScope = new Backbone.Model;
+
+            collectionScope.set('id', id);
+            collectionScope.set('scope', new Collection);
+
+            self.collections.add(collectionScope);
+        });
+
+        delete this.initCollections;
 	}
 };
 
 $(document).ready(function() {
-	core.init();
+	app.init();
 });

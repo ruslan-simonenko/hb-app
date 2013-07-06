@@ -1,4 +1,4 @@
-core.storage.router = Backbone.Router.extend({
+app.storage.router = Backbone.Router.extend({
 
     initialize: function() {
         Backbone.history.start();
