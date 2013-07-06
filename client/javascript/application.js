@@ -19,7 +19,7 @@ var core = {
 	templates: new Backbone.Collection,
 
 	// Temporary storage scope variables:
-	storage: { views: {}, models: {}, collections: {}, router: {} }, 
+	storage: { views: {}, models: {}, collections: {} },
 
 	// Init application:
 	init: function() {
@@ -29,14 +29,30 @@ var core = {
 			self.loadSettingsApp(),
 			self.loadSettingsApi()
 		).done(function() {
-			console.log('settings loaded');
+			self.initRouter();
+            self.initModels();
+            self.initViews();
+            self.initCollections();
+
+            delete self.storage;
 		});
 	},
 
     loadSettingsApp: function() {
 		var self = this,
 			deferred = new $.Deferred;
-			
+
+        $.ajax({
+            url: '/settings/app.json',
+            type: 'get',
+            dataType: 'json',
+
+            success: function(response) {
+                self.settings.app.set(response);
+                deferred.resolve();
+            }
+        });
+
         return deferred.promise();
 	},
 
@@ -44,23 +60,43 @@ var core = {
         var self = this,
             deferred = new $.Deferred;
 
+        $.ajax({
+            url: '/settings/api.json',
+            type: 'get',
+            dataType: 'json',
+
+            success: function(response) {
+                self.settings.api.set(response);
+                deferred.resolve();
+            }
+        });
+
         return deferred.promise();
 	},
 
 	initRouter: function() {
-
+        this.router = new core.storage.router;
 	},
 
 	initModels: function() {
+        var self = this;
 
+        $.each(this.storage.models, function(key, model) {
+            var collectionScope = new Backbone.Model;
+
+            collectionScope.set('id', key);
+            collectionScope.set('scopre', model);
+
+            self.models.add(collectionScope);
+        });
 	},
 
-	initView: function() {
-
+	initViews: function() {
+        console.log('init views');
 	},
 
 	initCollections: function() {
-
+        console.log('init collections');
 	}
 };
 
